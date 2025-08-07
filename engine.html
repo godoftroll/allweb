@@ -3,88 +3,154 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Latar Belakang</title>
+    <title>Hujan Kode Glitch</title>
     <!-- Tailwind CSS untuk styling cepat -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Gaya kustom untuk memastikan video mengisi seluruh layar */
-        .video-container {
-            position: fixed;
+        body {
+            background-color: #000000;
+            font-family: 'Courier New', Courier, monospace;
+            overflow: hidden; /* Mencegah scrolling */
+        }
+        canvas {
+            display: block;
+            position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
             z-index: -1;
         }
-
-        .video-container video {
-            min-width: 100%;
-            min-height: 100%;
-            width: auto;
-            height: auto;
+        /* Gaya kustom untuk tombol dan container */
+        .button-container {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
+            transition: all 0.5s ease-in-out;
+            z-index: 10;
         }
     </style>
 </head>
-<body class="bg-gray-900 text-white font-sans flex items-center justify-center h-screen">
+<body class="flex items-center justify-center h-screen">
 
-    <!-- Kontainer utama untuk tombol, disembunyikan setelah diklik -->
-    <div id="buttonContainer" class="flex flex-col items-center justify-center p-6 bg-gray-800 bg-opacity-70 rounded-lg shadow-xl backdrop-blur-sm transition-all duration-500">
-        <h1 class="text-3xl md:text-5xl font-bold mb-4 text-center">Tampilkan Keajaiban</h1>
-        <p class="text-sm md:text-lg mb-6 text-gray-300 text-center max-w-sm">Klik tombol di bawah untuk melihat video latar belakang.</p>
-        <button id="startButton" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-purple-500 focus:ring-opacity-50">
+    <!-- Kontainer tombol yang akan hilang -->
+    <div id="buttonContainer" class="button-container">
+        <button id="startButton" class="bg-black text-green-400 border border-green-400 font-bold py-4 px-10 rounded-full text-2xl shadow-xl transition-all duration-300 hover:bg-green-400 hover:text-black hover:shadow-green-500/50">
             Mulai
         </button>
     </div>
 
-    <!-- Kontainer video, awalnya tersembunyi -->
-    <div id="videoContainer" class="video-container hidden">
-        <!-- Sumber video sudah diubah ke lokasi lokal: media/video.mp4 -->
-        <video id="backgroundVideo" muted loop>
-            <source src="media/video.mp4" type="video/mp4">
-            Video Anda tidak didukung oleh browser ini.
-        </video>
-    </div>
+    <!-- Elemen Canvas untuk efek "hacker" -->
+    <canvas id="matrixCanvas"></canvas>
 
     <script>
+        // Ambil elemen-elemen dari DOM
         const buttonContainer = document.getElementById('buttonContainer');
         const startButton = document.getElementById('startButton');
-        const videoContainer = document.getElementById('videoContainer');
-        const videoElement = document.getElementById('backgroundVideo');
+        const canvas = document.getElementById('matrixCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let drops = []; // Array untuk menyimpan posisi y dari setiap kolom
+        let fontSize = 16; // Ukuran font
+        let columns; // Jumlah kolom, akan dihitung berdasarkan lebar layar
+
+        // Karakter untuk hujan kode
+        const matrixCharacters = '0123456789ABCDEF';
+
+        // Seni ASCII Bug
+        const bugArt = [
+            "  /  \\ ",
+            " (o  o)",
+            "  \\__/  ",
+            " /    \\ ",
+            "|      |",
+            "|______|",
+        ];
+
+        // Fungsi untuk mengatur ulang ukuran canvas agar responsif
+        const resizeCanvas = () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            columns = Math.floor(canvas.width / fontSize);
+            drops = [];
+            for (let i = 0; i < columns; i++) {
+                drops[i] = 1;
+            }
+        };
+
+        // Panggil fungsi resize saat halaman dimuat dan diubah ukurannya
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Fungsi untuk menggambar efek hujan kode
+        const drawMatrixRain = () => {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.04)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#00FF00'; // Warna hijau neon
+            ctx.font = `${fontSize}px 'Courier New', Courier, monospace`;
+
+            for (let i = 0; i < drops.length; i++) {
+                const text = matrixCharacters.charAt(Math.floor(Math.random() * matrixCharacters.length));
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+        };
+
+        // Fungsi untuk menggambar seni ASCII bug di posisi acak
+        const drawAsciiBug = () => {
+            const bugWidth = bugArt[0].length;
+            const bugHeight = bugArt.length;
+            
+            // Hitung posisi acak di dalam canvas
+            const maxCols = Math.floor(canvas.width / fontSize) - bugWidth;
+            const maxRows = Math.floor(canvas.height / fontSize) - bugHeight;
+            const randomX = Math.floor(Math.random() * maxCols) * fontSize;
+            const randomY = Math.floor(Math.random() * maxRows) * fontSize;
+
+            ctx.fillStyle = '#00FF00'; // Warna hijau
+            ctx.font = `${fontSize}px 'Courier New', Courier, monospace`;
+
+            for (let y = 0; y < bugArt.length; y++) {
+                ctx.fillText(bugArt[y], randomX, randomY + y * fontSize);
+            }
+        };
+
+        // Fungsi utama untuk menggambar, dipanggil setiap frame
+        const draw = () => {
+            drawMatrixRain();
+
+            // Tambahkan gambar bug secara acak dengan probabilitas rendah
+            if (Math.random() > 0.9) { 
+                drawAsciiBug();
+            }
+        };
+
+        // Fungsi untuk memulai animasi
+        const animate = () => {
+            draw();
+            setTimeout(() => {
+                requestAnimationFrame(animate);
+            }, 50); // Kecepatan efek (dalam ms)
+        };
 
         // Tambahkan event listener untuk tombol
         startButton.addEventListener('click', () => {
-            // Sembunyikan kontainer tombol dengan transisi
-            buttonContainer.classList.add('opacity-0', 'scale-95');
-            
-            // Tunggu sebentar sebelum benar-benar menghapus agar transisi terlihat
+            // Sembunyikan kontainer tombol dengan efek transisi
+            buttonContainer.style.opacity = '0';
             setTimeout(() => {
-                buttonContainer.classList.add('hidden');
-                
-                // Tampilkan kontainer video
-                videoContainer.classList.remove('hidden');
-
-                // Mainkan video. Pastikan ini ada di dalam interaksi pengguna
-                videoElement.play().catch(error => {
-                    console.error('Video autoplay failed:', error);
-                    // Tambahkan pesan ke pengguna jika autoplay gagal
-                });
-            }, 500); // Durasi harus sesuai dengan durasi transisi
+                buttonContainer.style.display = 'none';
+            }, 500);
+            
+            // Atur z-index canvas dan mulai animasi
+            canvas.style.zIndex = '1';
+            animate();
         });
 
-        // Event listener untuk memulai video saat data dimuat.
-        // Ini adalah fallback jika autoplay tidak berfungsi
-        videoElement.addEventListener('loadedmetadata', () => {
-            videoElement.play().catch(error => {
-                console.error('Video play on loadedmetadata failed:', error);
-            });
-        });
     </script>
-
 </body>
 </html>
 
