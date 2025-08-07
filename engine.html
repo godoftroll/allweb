@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Latar Belakang</title>
+    <!-- Tailwind CSS untuk styling cepat -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Gaya kustom untuk memastikan video mengisi seluruh layar */
+        .video-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .video-container video {
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white font-sans flex items-center justify-center h-screen">
+
+    <!-- Kontainer utama untuk tombol, disembunyikan setelah diklik -->
+    <div id="buttonContainer" class="flex flex-col items-center justify-center p-6 bg-gray-800 bg-opacity-70 rounded-lg shadow-xl backdrop-blur-sm transition-all duration-500">
+        <h1 class="text-3xl md:text-5xl font-bold mb-4 text-center">Tampilkan Keajaiban</h1>
+        <p class="text-sm md:text-lg mb-6 text-gray-300 text-center max-w-sm">Klik tombol di bawah untuk melihat video latar belakang.</p>
+        <button id="startButton" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-purple-500 focus:ring-opacity-50">
+            Mulai
+        </button>
+    </div>
+
+    <!-- Kontainer video, awalnya tersembunyi -->
+    <div id="videoContainer" class="video-container hidden">
+        <!-- Sumber video sudah diubah ke lokasi lokal: media/video.mp4 -->
+        <video id="backgroundVideo" muted loop>
+            <source src="media/video.mp4" type="video/mp4">
+            Video Anda tidak didukung oleh browser ini.
+        </video>
+    </div>
+
+    <script>
+        const buttonContainer = document.getElementById('buttonContainer');
+        const startButton = document.getElementById('startButton');
+        const videoContainer = document.getElementById('videoContainer');
+        const videoElement = document.getElementById('backgroundVideo');
+
+        // Tambahkan event listener untuk tombol
+        startButton.addEventListener('click', () => {
+            // Sembunyikan kontainer tombol dengan transisi
+            buttonContainer.classList.add('opacity-0', 'scale-95');
+            
+            // Tunggu sebentar sebelum benar-benar menghapus agar transisi terlihat
+            setTimeout(() => {
+                buttonContainer.classList.add('hidden');
+                
+                // Tampilkan kontainer video
+                videoContainer.classList.remove('hidden');
+
+                // Mainkan video. Pastikan ini ada di dalam interaksi pengguna
+                videoElement.play().catch(error => {
+                    console.error('Video autoplay failed:', error);
+                    // Tambahkan pesan ke pengguna jika autoplay gagal
+                });
+            }, 500); // Durasi harus sesuai dengan durasi transisi
+        });
+
+        // Event listener untuk memulai video saat data dimuat.
+        // Ini adalah fallback jika autoplay tidak berfungsi
+        videoElement.addEventListener('loadedmetadata', () => {
+            videoElement.play().catch(error => {
+                console.error('Video play on loadedmetadata failed:', error);
+            });
+        });
+    </script>
+
+</body>
+</html>
+
